@@ -1,10 +1,8 @@
 from flask import Flask, request
 import tensorflow as tf 
 import os
-# import keras_nlp
-# import tensorflow_hub as hub
-
-os['TF_ENABLE_ONEDNN_OPTS'] = 0
+from blurr.text.data.all import *
+from blurr.text.modeling.all import *
 
 # preprocessor = keras_nlp.models.DistilBertPreprocessor.from_preset(
 #     "distil_bert_base_en_uncased",
@@ -24,12 +22,24 @@ os['TF_ENABLE_ONEDNN_OPTS'] = 0
 # model.load_weights('../DistilBERT/EmotionExtractor')
 
 model = tf.saved_model.load('../EmotionExtractor')
-# tf.config.set_visible_devices([], 'GPU')  
-predictor = model.signatures["serving_default"]
+# # tf.config.set_visible_devices([], 'GPU')  
+# predictor = model.signatures["serving_default"]
+
+inf_learn = load_learner(fname='./NER-Model/model.pkl')
 
 app = Flask(__name__)
 
 @app.post("/emotion-extract")
 def extract_emotions():
     content = request.json['content']
-    return "Works"
+    output = model.predict([content])
+    return {
+        "emotion": emotions[np.argmax(output)],
+        "score": output[np.argmax(output)]
+    }
+
+@app.post("/ner-extract")
+def extract_locations():
+    content = request.json['content']
+    results = inf_learn.blurr_predict_tokens(items=[content])
+    return results
