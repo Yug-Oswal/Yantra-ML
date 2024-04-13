@@ -57,6 +57,8 @@ def filter_on_location(group_list, location):
     for group in group_list:
         if (group["location"] == location):
             filtered.append(group)
+    if (len(filtered) == 0):
+        return group_list
     return filtered
 
 @app.post("/emotion-extract")
@@ -72,7 +74,7 @@ def extract_emotions():
 def extract_locations():
     content = request.json['content']
     results = inf_learn.blurr_predict_tokens(items=[content])
-    return results
+    return results[0]
 
 @app.post("/get-dominating-emotion")
 def get_dominating_emotion():
