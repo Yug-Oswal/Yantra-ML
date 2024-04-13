@@ -1,8 +1,8 @@
 from flask import Flask, request
 import tensorflow as tf 
 import os
-from blurr.text.data.all import *
-from blurr.text.modeling.all import *
+# from blurr.text.data.all import *
+# from blurr.text.modeling.all import *
 from collections import Counter
 
 positive_emotions = ['admiration', 'amusement',  'approval', 'caring', 'curiosity', 'desire', 'excitement', 'gratitude', 'joy', 'love', 'optimism', 'pride', 'realization', 'relief', 'surprise', 'neutral']
@@ -25,11 +25,11 @@ negative_emotions = ['anger', 'annoyance', 'confusion', 'disappointment', 'disap
 # model = tf.keras.Model(inputs=[txt], outputs=x)
 # model.load_weights('../DistilBERT/EmotionExtractor')
 
-model = tf.saved_model.load('../EmotionExtractor')
+# model = tf.saved_model.load('../EmotionExtractor')
 # # tf.config.set_visible_devices([], 'GPU')  
 # predictor = model.signatures["serving_default"]
 
-inf_learn = load_learner(fname='./NER-Model/model.pkl')
+# inf_learn = load_learner(fname='./NER-Model/model.pkl')
 
 app = Flask(__name__)
 
@@ -91,7 +91,7 @@ def get_dominating_emotion():
     return {"dominatingEmotion": max_emo}
 
 
-@app.post("list-recommends")
+@app.post("/list-recommends")
 def list_recommends():
     person = {
         "id": 1234,
