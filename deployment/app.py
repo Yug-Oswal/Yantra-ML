@@ -21,7 +21,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 # import pathlib
 # temp = pathlib.PosixPath
 # pathlib.PosixPath = pathlib.WindowsPath
-# from collections import Counter
+from collections import Counter
 
 positive_emotions = ['admiration', 'amusement',  'approval', 'caring', 'curiosity', 'desire', 'excitement', 'gratitude', 'joy', 'love', 'optimism', 'pride', 'realization', 'relief', 'surprise']
 negative_emotions = ['anger', 'annoyance', 'confusion', 'disappointment', 'disapproval', 'disgust', 'embarrassment', 'fear', 'grief', 'nervousness', 'remorse', 'sadness']
@@ -130,32 +130,48 @@ def extract_emotions():
 
 @app.post("/get-dominating-emotion")
 def get_dominating_emotion():
-    ppl = [
-        {
-            "id": 1234,
-            "emotions": ["joy", "love", "disgust", "sadness", "joy", "love", "love"]
-        }
-    ]
+    # dup_ppl = [
+    #     {
+    #         "id": 1234,
+    #         "emotions": ["joy", "love", "disgust", "sadness", "joy", "love", "love"]
+    #     }
+    # ]
+    ppl = request.json['data']
     all_emotions = []
     for person in ppl: 
-        counts = Counter(person["emotions"])
-        max_ele, max_count = counts.most_common(1)[0]
-        all_emotions.append(max_ele)
+        if (person['emotions'] != None):
+            counts = Counter(person["emotions"])
+            max_ele, max_count = counts.most_common(1)[0]
+            all_emotions.append(max_ele)
+        else:
+            continue
+    if (len(all_emotions) == 0):
+        return {"emotion": 'neutral'}
     max_emo, max_count = Counter(all_emotions).most_common(1)[0]
-    return {"dominatingEmotion": max_emo}
+    return {"emotion": max_emo}
 
 
 @app.post("/list-recommends")
 def list_recommends():
-    person = {
-        "id": 1234,
-        "emotions": [["joy", "sadness", "remorse"], ["excitement", "joy", "grief"]],
-        "scores": [[7.2, 3.1, 1.2], [6.6, 5.5, 0.3]], 
-        "locations": ["Bangaladesh", "Vietnam"]
-    }
+    # person = {
+    #     "id": 1234,
+    #     "emotions": [["joy", "sadness", "remorse"], ["excitement", "joy", "grief"]],
+    #     "scores": [[7.2, 3.1, 1.2], [6.6, 5.5, 0.3]], 
+    #     "locations": ["Bangaladesh", "Vietnam"]
+    # }
+    person = request.json['person']
+    groups = request.json['groups']
+    print(person)
     emotions = person['emotions']
     scores = person['scores']
     d = {}
+    no_ids = []
+    for group in groups: 
+        no_ids.append(group['id'])
+    if (person['emotions'] == None or person['locations'] == None):
+        return {
+            "groupIDs": no_ids
+        }
     for i in range(len(person['emotions'])):
         for j in range(len(emotions[i])): 
             if emotions[i][j] not in list(d.keys()):
@@ -163,24 +179,36 @@ def list_recommends():
             else:
                 d[emotions[i][j]] += scores[i][j]
     emotion = max(d, key=d.get)
-    groups = [
-        {
-            "id": 123, 
-            "emotion": "joy",
-            "location": "Vietnam"
-        }
-    ]
+    # groups = [
+    #     {
+    #         "id": 123, 
+    #         "emotion": "joy",
+    #         "location": "Vietnam"
+    #     }
+    # ]
+    
+    print(groups)
     groups = filter_on_emotions(groups, emotion)
     for location in person['locations']:
         groups = filter_on_location(groups, location)
-    return groups
+    ids = []
+    for group in groups: 
+        ids.append(group['id'])
+    return {
+        "groupIDs": ids
+    }
 
 @app.post("/get-health-index")
 def get_hindex():
-    person = request.json['person']
-    hscore = person['happiness_score']
-    emotions = person['emotions']
-    scores = person['scores']
+    # person = request.json['person']
+    hscore = request.json['happiness_score']
+    emotions = request.json['emotions']
+    scores = request.json['scores']
+
+    if (emotions == None or hscore == None):
+        return {
+            "happiness_score": 0
+        }
 
     for i in range(len(emotions)):
         for j in range(len(emotions[i])):
